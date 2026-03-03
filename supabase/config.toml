@@ -1,0 +1,10 @@
+project_id = "iffaunhpiuspwozdalbs"
+
+[functions.analyze-ingredients]
+verify_jwt = false
+
+[functions.generate-recipes]
+verify_jwt = false
+
+[functions.generate-dish-image]
+verify_jwt = false
