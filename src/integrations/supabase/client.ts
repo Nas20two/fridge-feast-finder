@@ -1,9 +1,9 @@
-// Supabase client - uses env vars from Vercel
+// Supabase client - NaSy Hub
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://iffaunhpiuspwozdalbs.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmZmF1bmhwaXVzcHdvemRhbGJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Njc2MTgsImV4cCI6MjA4ODE0MzYxOH0.z0PyInCXC2ZvipEfWe5zwDekSAheURv6S3mJmBBLtAs';
+const SUPABASE_URL = 'https://xspsvvsxxnciqwqiellm.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcHN2dnN4eG5jaXF3cWllbGxtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzI4NDgsImV4cCI6MjA4Njk0ODg0OH0.k3Ne7ZBMv_BwRMn_eyUbEwPONYe_fkJ2tSPqFHlSmr8';
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
