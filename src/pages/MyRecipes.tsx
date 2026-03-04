@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { importRecipeFromURL } from "@/lib/gemini";
 import type { SavedRecipe } from "@/types/recipe";
 import RecipeDetailDialog from "@/components/RecipeDetailDialog";
 import { useNavigate } from "react-router-dom";
@@ -61,10 +62,8 @@ const MyRecipes = () => {
     if (!importUrl.trim()) return;
     setImporting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("import-recipe", {
-        body: { url: importUrl.trim() },
-      });
-      if (error) throw error;
+      const data = await importRecipeFromURL(importUrl.trim());
+      if (!data) throw new Error("Failed to parse recipe");
       // Save imported recipe
       const { error: saveErr } = await supabase.from("saved_recipes").insert({
         user_id: user.id,

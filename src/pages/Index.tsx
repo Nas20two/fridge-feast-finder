@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { analyzeIngredients, generateRecipes } from "@/lib/gemini";
 import { useToast } from "@/hooks/use-toast";
 import HeroSection from "@/components/HeroSection";
 import IngredientInput from "@/components/IngredientInput";
@@ -21,11 +21,8 @@ const Index = () => {
   const handleAnalyze = async (data: { image?: string; text?: string }) => {
     setAnalyzingLoading(true);
     try {
-      const { data: result, error } = await supabase.functions.invoke("analyze-ingredients", {
-        body: data,
-      });
-      if (error) throw error;
-      setIngredients(result.ingredients);
+      const ingredients = await analyzeIngredients(data.text || '');
+      setIngredients(ingredients);
       setStep("edit");
     } catch (e: any) {
       toast({ title: "Error analyzing ingredients", description: e.message, variant: "destructive" });
@@ -38,10 +35,7 @@ const Index = () => {
     setRecipesLoading(true);
     setStep("loading");
     try {
-      const { data: result, error } = await supabase.functions.invoke("generate-recipes", {
-        body: { ingredients: confirmedIngredients },
-      });
-      if (error) throw error;
+      const result = await generateRecipes(confirmedIngredients);
 
       const recipesWithLoading: Recipe[] = result.recipes.map((r: any, i: number) => ({
         id: `recipe-${i}`,
@@ -51,29 +45,10 @@ const Index = () => {
         nutrition: r.nutrition,
         servings: r.servings || 4,
         imageUrl: undefined,
-        imageLoading: true,
+        imageLoading: false,
       }));
       setRecipes(recipesWithLoading);
       setStep("results");
-
-      // Generate images in parallel
-      recipesWithLoading.forEach(async (recipe, i) => {
-        try {
-          const { data: imgResult, error: imgError } = await supabase.functions.invoke("generate-dish-image", {
-            body: { title: recipe.title, ingredients: recipe.ingredients },
-          });
-          if (imgError) throw imgError;
-          setRecipes((prev) =>
-            prev.map((r) =>
-              r.id === recipe.id ? { ...r, imageUrl: imgResult.imageUrl, imageLoading: false } : r
-            )
-          );
-        } catch {
-          setRecipes((prev) =>
-            prev.map((r) => (r.id === recipe.id ? { ...r, imageLoading: false } : r))
-          );
-        }
-      });
     } catch (e: any) {
       toast({ title: "Error generating recipes", description: e.message, variant: "destructive" });
       setStep("edit");
