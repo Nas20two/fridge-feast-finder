@@ -48,6 +48,8 @@ const Index = () => {
         title: r.title,
         ingredients: r.ingredients,
         instructions: r.instructions,
+        nutrition: r.nutrition,
+        servings: r.servings || 4,
         imageUrl: undefined,
         imageLoading: true,
       }));
