@@ -24,7 +24,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "You are a creative chef. Generate exactly 4 unique recipe suggestions. No preamble."
+            content: "You are a creative chef and nutritionist. Generate exactly 4 unique recipe suggestions with estimated nutrition info. No preamble."
           },
           {
             role: "user",
@@ -35,7 +35,7 @@ serve(async (req) => {
           type: "function",
           function: {
             name: "return_recipes",
-            description: "Return 4 recipe suggestions based on available ingredients.",
+            description: "Return 4 recipe suggestions with nutrition info.",
             parameters: {
               type: "object",
               properties: {
@@ -47,8 +47,21 @@ serve(async (req) => {
                       title: { type: "string", description: "Recipe name" },
                       ingredients: { type: "array", items: { type: "string" }, description: "Full ingredient list with quantities" },
                       instructions: { type: "array", items: { type: "string" }, description: "Step-by-step cooking instructions" },
+                      servings: { type: "number", description: "Number of servings" },
+                      nutrition: {
+                        type: "object",
+                        description: "Estimated nutrition per serving",
+                        properties: {
+                          calories: { type: "number" },
+                          protein: { type: "number" },
+                          carbs: { type: "number" },
+                          fat: { type: "number" },
+                        },
+                        required: ["calories", "protein", "carbs", "fat"],
+                        additionalProperties: false,
+                      },
                     },
-                    required: ["title", "ingredients", "instructions"],
+                    required: ["title", "ingredients", "instructions", "servings", "nutrition"],
                     additionalProperties: false,
                   },
                 },
