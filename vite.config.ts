@@ -20,8 +20,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "icons/icon-192.png", "icons/icon-512.png"],
       manifest: {
-        name: "Recipe Genie",
-        short_name: "Recipe Genie",
+        name: "Recipe Remix",
+        short_name: "Recipe Remix",
         description: "Transform your fridge leftovers into delicious meals with AI",
         theme_color: "#006B3F",
         background_color: "#F5F7F5",

@@ -21,7 +21,7 @@ const HeroSection = () => {
             <ChefHat className="h-10 w-10 text-primary-foreground" />
           </div>
           <h1 className="mb-4 text-4xl font-bold tracking-tight text-primary-foreground md:text-6xl">
-            Recipe Genie
+            Recipe Remix
           </h1>
           <p className="mx-auto max-w-2xl text-lg text-primary-foreground/80 md:text-xl">
             Transform your fridge leftovers into delicious meals. Upload a photo or type your ingredients — we'll conjure up amazing recipes!

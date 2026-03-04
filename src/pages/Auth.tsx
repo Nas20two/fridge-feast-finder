@@ -60,7 +60,7 @@ const Auth = () => {
               {isSignUp ? "Create Account" : "Welcome Back"}
             </CardTitle>
             <CardDescription>
-              {isSignUp ? "Join Recipe Genie to save recipes & more" : "Sign in to your account"}
+              {isSignUp ? "Join Recipe Remix to save recipes & more" : "Sign in to your account"}
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -105,7 +105,7 @@ const Index = () => {
       {step === "loading" && <CookingLoader />}
       {step === "results" && <RecipeResults recipes={recipes} onReset={reset} />}
       <footer className="py-8 text-center text-sm text-muted-foreground">
-        Made with 💚 by Recipe Genie
+        Made by NaSy
       </footer>
     </div>
   );

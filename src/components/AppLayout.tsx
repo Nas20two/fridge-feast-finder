@@ -23,7 +23,7 @@ const AppLayout = () => {
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-border bg-sidebar md:flex md:flex-col">
         <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
           <span className="text-2xl">🧞</span>
-          <h1 className="font-serif text-xl font-bold text-sidebar-foreground">Recipe Genie</h1>
+          <h1 className="font-serif text-xl font-bold text-sidebar-foreground">Recipe Remix</h1>
         </div>
         <nav className="flex-1 space-y-1 p-4">
           {navItems.map((item) => (
