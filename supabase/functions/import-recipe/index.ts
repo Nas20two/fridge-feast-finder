@@ -1,9 +1,14 @@
+// Edge Function: import-recipe
+// Imports recipes from URLs using Gemini API
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -12,76 +17,84 @@ serve(async (req) => {
     const { url } = await req.json();
     if (!url) throw new Error("URL is required");
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
 
     // Fetch the page content
     let pageContent = "";
     try {
       const pageResp = await fetch(url, {
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; RecipeGenie/1.0)" },
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; RecipeRemix/1.0)" },
       });
       pageContent = await pageResp.text();
       // Truncate to avoid token limits
-      pageContent = pageContent.substring(0, 15000);
+      pageContent = pageContent.substring(0, 10000);
     } catch {
       pageContent = `URL: ${url}`;
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: "Extract recipe data from the given webpage content." },
-          { role: "user", content: `Extract the recipe from this webpage. URL: ${url}\n\nContent:\n${pageContent}` },
-        ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "return_recipe",
-            description: "Return extracted recipe data",
-            parameters: {
-              type: "object",
-              properties: {
-                title: { type: "string" },
-                ingredients: { type: "array", items: { type: "string" } },
-                instructions: { type: "array", items: { type: "string" } },
-                servings: { type: "number" },
-              },
-              required: ["title", "ingredients", "instructions"],
-              additionalProperties: false,
-            },
-          },
-        }],
-        tool_choice: { type: "function", function: { name: "return_recipe" } },
-      }),
-    });
+    const prompt = `Extract the recipe from this webpage content. Return ONLY a JSON object with this exact structure:
+{
+  "title": "Recipe Name",
+  "description": "Brief description",
+  "ingredients": ["ingredient 1", "ingredient 2"],
+  "instructions": ["step 1", "step 2"],
+  "servings": 4,
+  "cookingTime": 30,
+  "difficulty": "Easy"
+}
+
+Webpage URL: ${url}
+
+Content:
+${pageContent}`;
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: "application/json" }
+        }),
+      }
+    );
 
     if (!response.ok) {
       const status = response.status;
-      if (status === 429) return new Response(JSON.stringify({ error: "Rate limit exceeded" }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      if (status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted" }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      throw new Error(`AI gateway error: ${status}`);
+      if (status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      throw new Error(`Gemini API error: ${status}`);
     }
 
     const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) throw new Error("Failed to extract recipe");
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    
+    // Extract JSON from response
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("Failed to parse recipe from response");
+    }
 
-    const result = JSON.parse(toolCall.function.arguments);
+    const result = JSON.parse(jsonMatch[0]);
+    
+    // Validate required fields
+    if (!result.title || !result.ingredients || !result.instructions) {
+      throw new Error("Recipe is missing required fields");
+    }
+
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("import-recipe error:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: e.message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 });
