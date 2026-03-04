@@ -1,73 +1,115 @@
-# Welcome to your Lovable project
+# Fridge Feast Finder
 
-## Project info
+A smart recipe discovery app that helps you create delicious meals from ingredients you already have. Reduce food waste and discover new recipes with AI-powered ingredient analysis.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Features
 
-## How can I edit this code?
+🥗 **Ingredient Analysis**
+- Upload photos of your fridge or pantry
+- Type ingredients manually
+- AI extracts and identifies ingredients automatically
 
-There are several ways of editing your application.
+🍳 **Recipe Generation**
+- Get personalized recipes based on your ingredients
+- View detailed instructions and nutrition info
+- See AI-generated images of each dish
 
-**Use Lovable**
+📱 **Mobile-First PWA**
+- Works offline as a Progressive Web App
+- Install on your phone for quick access
+- Responsive design for all screen sizes
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+🔐 **User Accounts**
+- Save your favorite recipes
+- Create meal plans
+- Build grocery lists
 
-Changes made via Lovable will be committed automatically to this repo.
+## Tech Stack
 
-**Use your preferred IDE**
+- **Frontend:** React 18 + TypeScript + Vite
+- **Styling:** Tailwind CSS + shadcn-ui
+- **Backend:** Supabase (Auth, Database, Edge Functions)
+- **AI:** Gemini API for ingredient analysis & recipe generation
+- **Hosting:** Vercel
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Getting Started
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Prerequisites
+- Node.js 18+
+- npm or pnpm
 
-Follow these steps:
+### Installation
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+```bash
+# Clone the repository
+git clone https://github.com/Nas20two/fridge-feast-finder.git
+cd fridge-feast-finder
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Install dependencies
+npm install
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Set up environment variables
+# Copy .env.example to .env and fill in your Supabase credentials
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Environment Variables
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Create a `.env` file with:
 
-**Use GitHub Codespaces**
+```env
+VITE_SUPABASE_PROJECT_ID=your_project_id
+VITE_SUPABASE_PUBLISHABLE_KEY=your_anon_key
+VITE_SUPABASE_URL=your_supabase_url
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Deployment
 
-## What technologies are used for this project?
+### Deploy to Vercel
 
-This project is built with:
+```bash
+# Install Vercel CLI
+npm i -g vercel
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+# Deploy
+vercel --prod
+```
 
-## How can I deploy this project?
+### Supabase Setup
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+1. Create a new Supabase project
+2. Set up authentication (Email/Google)
+3. Deploy Edge Functions:
+   - `analyze-ingredients` - Extracts ingredients from images/text
+   - `generate-recipes` - Creates recipes from ingredients
+   - `generate-dish-image` - Creates AI images of dishes
 
-## Can I connect a custom domain to my Lovable project?
+## How It Works
 
-Yes, you can!
+1. **Input Ingredients:** Upload a photo or type ingredients
+2. **AI Analysis:** Gemini AI identifies and categorizes ingredients
+3. **Confirm & Edit:** Review the ingredient list
+4. **Generate Recipes:** AI creates personalized recipes
+5. **Cook & Enjoy:** Follow instructions with nutrition info
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Future Enhancements
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- [ ] Dietary restrictions (vegan, gluten-free, etc.)
+- [ ] Nutrition tracking
+- [ ] Shopping list export
+- [ ] Recipe sharing
+- [ ] Cookbook collections
+
+## License
+
+MIT License - feel free to use and modify!
+
+## Author
+
+Built by NaSy
+
+---
+
+**Live Demo:** [fridge-feast-finder.vercel.app](https://fridge-feast-finder.vercel.app)
