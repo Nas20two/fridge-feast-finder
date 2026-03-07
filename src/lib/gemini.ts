@@ -1,5 +1,5 @@
 // Supabase Edge Function calls
-// Secure backend API calls - no exposed keys
+// Uses Gemini Flash via Supabase (Fast + Free + Secure)
 
 import { supabase } from '@/integrations/supabase/client';
 

@@ -1,7 +1,7 @@
-// Analyze ingredients using Qwen (replaces Gemini)
+// Analyze ingredients using Gemini Flash (FREE TIER - Fast!)
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
-const DASHSCOPE_API_KEY = Deno.env.get('DASHSCOPE_API_KEY') || 'sk-ba78c00dde8f4add9a24afe1b09a0e9b'
+const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
 
 serve(async (req) => {
   // Handle CORS
@@ -17,28 +17,20 @@ serve(async (req) => {
   try {
     const { text } = await req.json()
     
-    if (!DASHSCOPE_API_KEY) {
+    if (!GEMINI_API_KEY) {
       return new Response(
-        JSON.stringify({ error: 'API key missing' }),
+        JSON.stringify({ error: 'GEMINI_API_KEY not configured in Supabase secrets' }),
         { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
       )
     }
 
     const response = await fetch(
-      'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions',
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${DASHSCOPE_API_KEY}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'qwen3.5-flash',
-          messages: [
-            { role: 'system', content: 'Extract ingredients and return as simple list, one per line.' },
-            { role: 'user', content: `Ingredients from: ${text}` }
-          ],
-          max_tokens: 500
+          contents: [{ parts: [{ text: `Extract ingredients from: "${text}". List each on new line.` }] }]
         })
       }
     )
@@ -46,10 +38,10 @@ serve(async (req) => {
     const data = await response.json()
     
     if (!response.ok) {
-      throw new Error(data.error?.message || 'Qwen API error')
+      throw new Error(data.error?.message || 'Gemini API error')
     }
     
-    const resultText = data.choices?.[0]?.message?.content || ''
+    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
     const ingredients = resultText.split('\n').map(i => i.replace(/^[-*•]\s*/, '').trim()).filter(i => i && i.length > 1)
     
     return new Response(
