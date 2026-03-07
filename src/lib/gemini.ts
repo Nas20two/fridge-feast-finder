@@ -1,58 +1,55 @@
-// Direct Gemini API calls from frontend
-// No edge functions needed
+// Supabase Edge Function calls
+// Secure backend API calls - no exposed keys
 
-const GEMINI_API_KEY = 'AIzaSyDJLM-PYH6SP1uLW3RLGfuhWaLWMFkq3R4';
+import { supabase } from '@/integrations/supabase/client';
 
 export async function analyzeIngredients(text: string) {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: `Extract ingredients from: "${text}". List each on new line.` }] }]
-      })
-    }
-  );
+  const { data, error } = await supabase.functions.invoke('analyze-ingredients', {
+    body: { text }
+  });
   
-  const data = await response.json();
-  const text_response = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  return text_response.split('\n').map(i => i.replace(/^[-*•]\s*/, '').trim()).filter(i => i);
+  if (error) {
+    console.error('Edge function error:', error);
+    throw new Error(error.message || 'Failed to analyze ingredients');
+  }
+  
+  if (data.error) {
+    throw new Error(data.error);
+  }
+  
+  return data.ingredients || [];
 }
 
 export async function generateRecipes(ingredients: string[]) {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: `Create 3 recipes using: ${ingredients.join(', ')}. Return JSON: {recipes: [{title, ingredients[], instructions[], servings, cookingTime, difficulty}]}` }] }]
-      })
-    }
-  );
+  const { data, error } = await supabase.functions.invoke('generate-recipes', {
+    body: { ingredients }
+  });
   
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  return jsonMatch ? JSON.parse(jsonMatch[0]) : { recipes: [] };
+  if (error) {
+    console.error('Edge function error:', error);
+    throw new Error(error.message || 'Failed to generate recipes');
+  }
+  
+  if (data.error) {
+    throw new Error(data.error);
+  }
+  
+  return data || { recipes: [] };
 }
 
 export async function importRecipeFromURL(url: string) {
-  // Fetch page content first (will need CORS proxy or skip)
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: `Extract recipe from URL: ${url}. Return JSON: {title, ingredients[], instructions[]}` }] }]
-      })
-    }
-  );
+  const { data, error } = await supabase.functions.invoke('import-recipe', {
+    body: { url }
+  });
   
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+  if (error) {
+    console.error('Edge function error:', error);
+    throw new Error(error.message || 'Failed to import recipe');
+  }
+  
+  if (data.error) {
+    throw new Error(data.error);
+  }
+  
+  return data;
 }

@@ -1,7 +1,7 @@
-// Minimal test function
+// Analyze ingredients using Qwen (replaces Gemini)
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
+const DASHSCOPE_API_KEY = Deno.env.get('DASHSCOPE_API_KEY') || 'sk-ba78c00dde8f4add9a24afe1b09a0e9b'
 
 serve(async (req) => {
   // Handle CORS
@@ -17,7 +17,7 @@ serve(async (req) => {
   try {
     const { text } = await req.json()
     
-    if (!GEMINI_API_KEY) {
+    if (!DASHSCOPE_API_KEY) {
       return new Response(
         JSON.stringify({ error: 'API key missing' }),
         { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
@@ -25,25 +25,39 @@ serve(async (req) => {
     }
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${DASHSCOPE_API_KEY}`
+        },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: `List ingredients from: ${text}` }] }]
+          model: 'qwen3.5-flash',
+          messages: [
+            { role: 'system', content: 'Extract ingredients and return as simple list, one per line.' },
+            { role: 'user', content: `Ingredients from: ${text}` }
+          ],
+          max_tokens: 500
         })
       }
     )
     
     const data = await response.json()
-    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
-    const ingredients = resultText.split('\n').map(i => i.trim()).filter(i => i)
+    
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'Qwen API error')
+    }
+    
+    const resultText = data.choices?.[0]?.message?.content || ''
+    const ingredients = resultText.split('\n').map(i => i.replace(/^[-*•]\s*/, '').trim()).filter(i => i && i.length > 1)
     
     return new Response(
       JSON.stringify({ ingredients }),
       { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
     )
   } catch (error) {
+    console.error('Error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }

@@ -1,18 +1,28 @@
 // Edge Function: generate-recipes
-// Generates recipes from ingredients using Gemini
+// Generates recipes from ingredients using Qwen (replaces Gemini)
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
+const DASHSCOPE_API_KEY = Deno.env.get('DASHSCOPE_API_KEY') || 'sk-ba78c00dde8f4add9a24afe1b09a0e9b'
 
 serve(async (req) => {
+  // Handle CORS
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      }
+    })
+  }
+
   try {
     const { ingredients } = await req.json()
     
     if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
       return new Response(
         JSON.stringify({ error: 'Please provide ingredients' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
       )
     }
 
@@ -30,37 +40,48 @@ For each recipe, provide:
 7. Cooking time
 8. Difficulty level (Easy/Medium/Hard)
 
-Format as JSON like this:
+Format as JSON:
 {
   "recipes": [
     {
       "title": "Recipe Name",
       "description": "Brief description",
-      "ingredients": ["2 cups flour", "3 eggs", ...],
-      "instructions": ["Step 1...", "Step 2...", ...],
+      "ingredients": ["2 cups flour", "3 eggs"],
+      "instructions": ["Step 1...", "Step 2..."],
       "nutrition": {"calories": 450, "protein": 25, "carbs": 50, "fat": 15},
       "servings": 4,
       "cookingTime": 30,
       "difficulty": "Easy"
     }
   ]
-}
-
-Make sure recipes are practical and use the available ingredients creatively. You can suggest adding 1-2 common pantry staples if needed.`
+}`
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${DASHSCOPE_API_KEY}`
+        },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
+          model: 'qwen3.5-plus',
+          messages: [
+            { role: 'system', content: 'You are a helpful recipe assistant. Return only valid JSON.' },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: 2000
         })
       }
     )
     
     const data = await response.json()
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'Qwen API error')
+    }
+    
+    const text = data.choices?.[0]?.message?.content || ''
     
     // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/)
@@ -72,13 +93,14 @@ Make sure recipes are practical and use the available ingredients creatively. Yo
     
     return new Response(
       JSON.stringify(recipes),
-      { headers: { 'Content-Type': 'application/json' } }
+      { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
     )
     
   } catch (error) {
+    console.error('Error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
     )
   }
 })
