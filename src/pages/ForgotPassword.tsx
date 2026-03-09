@@ -22,6 +22,20 @@ const ForgotPassword = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Rate limiting: prevent spam
+    const lastRequest = localStorage.getItem('lastPasswordReset');
+    const now = Date.now();
+    if (lastRequest && now - parseInt(lastRequest) < 60000) {
+      const secondsLeft = Math.ceil((60000 - (now - parseInt(lastRequest))) / 1000);
+      toast({
+        title: "Please wait",
+        description: `You can request another reset in ${secondsLeft} seconds`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setSubmitting(true);
     
     const { error } = await resetPassword(email);
@@ -33,6 +47,7 @@ const ForgotPassword = () => {
         variant: "destructive" 
       });
     } else {
+      localStorage.setItem('lastPasswordReset', now.toString());
       setSent(true);
       toast({ 
         title: "Email sent", 
