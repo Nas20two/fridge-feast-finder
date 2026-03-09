@@ -1,4 +1,4 @@
-// Analyze ingredients using Gemini Flash (FREE TIER - Fast!)
+// Analyze ingredients using Gemini 2.5 Flash
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
@@ -19,13 +19,13 @@ serve(async (req) => {
     
     if (!GEMINI_API_KEY) {
       return new Response(
-        JSON.stringify({ error: 'GEMINI_API_KEY not configured in Supabase secrets' }),
+        JSON.stringify({ error: 'GEMINI_API_KEY not configured' }),
         { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
       )
     }
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

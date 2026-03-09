@@ -1,25 +1,35 @@
-// Edge Function: import-recipe
-// Imports recipes from URLs using Gemini Flash (FREE TIER - Fast!)
-
+// Edge Function: import-recipe using Gemini 2.5 Flash
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, { 
+      status: 204,
+      headers: corsHeaders 
+    });
+  }
 
   try {
     const { url } = await req.json();
-    if (!url) throw new Error("URL is required");
+    if (!url) {
+      return new Response(
+        JSON.stringify({ error: "URL is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (!GEMINI_API_KEY) {
       return new Response(
-        JSON.stringify({ error: 'GEMINI_API_KEY not configured in Supabase secrets' }),
+        JSON.stringify({ error: 'GEMINI_API_KEY not configured' }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       )
     }
@@ -31,13 +41,13 @@ serve(async (req) => {
         headers: { "User-Agent": "Mozilla/5.0 (compatible; RecipeRemix/1.0)" },
       });
       pageContent = await pageResp.text();
-      // Truncate to avoid token limits
-      pageContent = pageContent.substring(0, 10000);
-    } catch {
+      pageContent = pageContent.substring(0, 8000);
+    } catch (fetchErr) {
+      console.log("Fetch error (using URL only):", fetchErr);
       pageContent = `URL: ${url}`;
     }
 
-    const prompt = `Extract the recipe from this webpage content. Return ONLY a JSON object with this exact structure:
+    const prompt = `Extract the recipe from this webpage content. Return ONLY a JSON object:
 {
   "title": "Recipe Name",
   "description": "Brief description",
@@ -54,33 +64,28 @@ Content:
 ${pageContent}`;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: "application/json" }
         }),
       }
     );
 
     if (!response.ok) {
       const status = response.status;
-      if (status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
       const data = await response.json();
+      console.error("Gemini API error:", data);
       throw new Error(`Gemini API error: ${status} - ${data.error?.message || 'Unknown error'}`);
     }
 
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
-    // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error("Failed to parse recipe from response");
@@ -88,7 +93,6 @@ ${pageContent}`;
 
     const result = JSON.parse(jsonMatch[0]);
     
-    // Validate required fields
     if (!result.title || !result.ingredients || !result.instructions) {
       throw new Error("Recipe is missing required fields");
     }
