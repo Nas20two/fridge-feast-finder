@@ -107,11 +107,11 @@ const RecipeCard = ({ recipe, index }: RecipeCardProps) => {
           )}
 
           <div className="mb-3 flex flex-wrap gap-1.5">
-            {recipe.ingredients.slice(0, 5).map((ing, i) => (
+            {recipe.ingredients?.slice(0, 5).map((ing, i) => (
               <Badge key={i} variant="outline" className="text-xs">{ing}</Badge>
             ))}
-            {recipe.ingredients.length > 5 && (
-              <Badge variant="outline" className="text-xs">+{recipe.ingredients.length - 5} more</Badge>
+            {recipe.ingredients?.length || 0 > 5 && (
+              <Badge variant="outline" className="text-xs">+{recipe.ingredients?.length || 0 - 5} more</Badge>
             )}
           </div>
           <Button variant="ghost" size="sm" className="w-full justify-between" onClick={() => setExpanded(!expanded)}>
@@ -122,11 +122,11 @@ const RecipeCard = ({ recipe, index }: RecipeCardProps) => {
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-3 space-y-2">
               <h4 className="font-semibold text-sm">All Ingredients:</h4>
               <ul className="mb-3 list-disc pl-5 text-sm text-muted-foreground">
-                {recipe.ingredients.map((ing, i) => <li key={i}>{ing}</li>)}
+                {recipe.ingredients?.map((ing, i) => <li key={i}>{ing}</li>)}
               </ul>
               <h4 className="font-semibold text-sm">Instructions:</h4>
               <ol className="list-decimal pl-5 text-sm text-muted-foreground space-y-1">
-                {recipe.instructions.map((step, i) => <li key={i}>{step}</li>)}
+                {recipe.instructions?.map((step, i) => <li key={i}>{step}</li>)}
               </ol>
             </motion.div>
           )}

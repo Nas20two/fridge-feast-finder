@@ -1,5 +1,5 @@
 // Supabase Edge Function calls
-// Uses Gemini Flash via Supabase (Fast + Free + Secure)
+// Uses DeepSeek via OpenRouter (Free + Fast)
 
 import { supabase } from '@/integrations/supabase/client';
 
@@ -34,7 +34,8 @@ export async function generateRecipes(ingredients: string[]) {
     throw new Error(data.error);
   }
   
-  return data || { recipes: [] };
+  // Ensure we return { recipes: [...] } structure
+  return { recipes: data.recipes || [] };
 }
 
 export async function importRecipeFromURL(url: string) {
