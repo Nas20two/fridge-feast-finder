@@ -35,3 +35,20 @@ export async function importRecipeFromURL(url: string) {
   
   return data;
 }
+
+export async function generateDishImage(title: string, ingredients: string[]) {
+  const { data, error } = await supabase.functions.invoke('generate-dish-image', {
+    body: { title, ingredients }
+  });
+  
+  if (error) {
+    console.error('Image generation error:', error);
+    return null;
+  }
+  if (data.error) {
+    console.error('Image generation error:', data.error);
+    return null;
+  }
+  
+  return data.imageUrl || null;
+}

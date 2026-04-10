@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { analyzeIngredients, generateRecipes } from "@/lib/gemini";
+import { analyzeIngredients, generateRecipes, generateDishImage } from "@/lib/gemini";
 import { useToast } from "@/hooks/use-toast";
 import HeroSection from "@/components/HeroSection";
 import IngredientInput from "@/components/IngredientInput";
@@ -45,14 +45,29 @@ const Index = () => {
         nutrition: r.nutrition,
         servings: r.servings || 4,
         imageUrl: undefined,
-        imageLoading: false,
+        imageLoading: true,
       }));
       setRecipes(recipesWithLoading);
       setStep("results");
+      setRecipesLoading(false);
+
+      // Fetch images for each recipe in parallel
+      recipesWithLoading.forEach(async (recipe, index) => {
+        try {
+          const imageUrl = await generateDishImage(recipe.title, recipe.ingredients);
+          setRecipes(prev => prev.map((r, i) => 
+            i === index ? { ...r, imageUrl: imageUrl || undefined, imageLoading: false } : r
+          ));
+        } catch (e) {
+          console.error(`Failed to generate image for ${recipe.title}:`, e);
+          setRecipes(prev => prev.map((r, i) => 
+            i === index ? { ...r, imageLoading: false } : r
+          ));
+        }
+      });
     } catch (e: any) {
       toast({ title: "Error generating recipes", description: e.message, variant: "destructive" });
       setStep("edit");
-    } finally {
       setRecipesLoading(false);
     }
   };
