@@ -1,5 +1,5 @@
 // Supabase Edge Function calls
-// Uses DeepSeek via OpenRouter (Free + Fast)
+// Uses Gemini 2.0 Flash (Fast + Free)
 
 import { supabase } from '@/integrations/supabase/client';
 
@@ -8,14 +8,8 @@ export async function analyzeIngredients(text: string) {
     body: { text }
   });
   
-  if (error) {
-    console.error('Edge function error:', error);
-    throw new Error(error.message || 'Failed to analyze ingredients');
-  }
-  
-  if (data.error) {
-    throw new Error(data.error);
-  }
+  if (error) throw new Error(error.message || 'Failed to analyze ingredients');
+  if (data.error) throw new Error(data.error);
   
   return data.ingredients || [];
 }
@@ -25,16 +19,9 @@ export async function generateRecipes(ingredients: string[]) {
     body: { ingredients }
   });
   
-  if (error) {
-    console.error('Edge function error:', error);
-    throw new Error(error.message || 'Failed to generate recipes');
-  }
+  if (error) throw new Error(error.message || 'Failed to generate recipes');
+  if (data.error) throw new Error(data.error);
   
-  if (data.error) {
-    throw new Error(data.error);
-  }
-  
-  // Ensure we return { recipes: [...] } structure
   return { recipes: data.recipes || [] };
 }
 
@@ -43,14 +30,8 @@ export async function importRecipeFromURL(url: string) {
     body: { url }
   });
   
-  if (error) {
-    console.error('Edge function error:', error);
-    throw new Error(error.message || 'Failed to import recipe');
-  }
-  
-  if (data.error) {
-    throw new Error(data.error);
-  }
+  if (error) throw new Error(error.message || 'Failed to import recipe');
+  if (data.error) throw new Error(data.error);
   
   return data;
 }
