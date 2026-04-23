@@ -1,0 +1,25 @@
+{
+  "name": "Fridge Feast Finder",
+  "short_name": "FridgeFeast",
+  "description": "Upload a photo of your fridge or type ingredients. AI generates delicious recipes with images and nutrition info.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#006B3F",
+  "theme_color": "#006B3F",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
